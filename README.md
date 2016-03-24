@@ -66,13 +66,13 @@ The packaged can be git cloned or downloaded from pypi via pip3.
 ```
 *dynipman_sd* is the server daemon script. This will start the server daemon. The following contents will be created the very first time the server daemon is run:
 ```
-~/.dynipman
+/var/lib/dynipman
       /addressbook.json
       /conf
       /logs.txt
 ```
 
-After the initial run, ~/.dynipman/conf should be edited for personal use.
+After the initial run, /var/lib/dynipman/conf should be edited for personal use.
 The SHARED_KEY, SERVER, and CLIENT settings should be edited.
 *addressbook.json* is the json file containing all the IP addresses, and the name can be changed in *conf*.
 The *conf* file should be copied and used in all the client workstations.
@@ -86,7 +86,7 @@ The *conf* file should be copied and used in all the client workstations.
 *dynipman_cd* is the client daemon script. The first time the client daemon is run, an error will likely be thrown (unless the server daemon was run on the same workstation before).
 ```
  Connection Error!
-   check config at ~/.dynipman/conf
+   check config at /var/lib/dynipman/conf
    if the config is correct, then the server might be down.
 ```
 Press Ctrl + C to interrupt the daemon, and then copy the *conf* file from the server (or edit the contents so that it is the same as the conf on server)
