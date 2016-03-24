@@ -1,30 +1,26 @@
-import requests, socket
+import requests, socket, json
+import conf
 
-CLIENT_NAME = 'jks-xeon-home'
+CLIENT_NAME = conf.CLIENT['name']
+
+# SERVER_URL = 'http://www.jungkumseok.com:7883'
+SERVER_URL = conf.SERVER['url']
 
 def device_info():
-    ip = socket.gethostname()
     info = {
+            'host': socket.gethostname(),
             'name': CLIENT_NAME,
-            'ip': socket.gethostbyname(socket.gethostname())
+            'nonce': 'abcdefg',
             }
-    
+    print("Client host: "+info['host'])
     print("Client name: "+info['name'])
-    print("Client secret: ")
-    print("IP: "+str(info['ip']))
-    print("Hostname: ")
+    print("Client secret: "+info['nonce'])
     return info
     
 def report_ip():
-    print("Say IP")
-    print("Requesting Server")
-    print("Server Response: ")
-    response = requests.get('http://192.168.0.73:8010/').content
-    print(response)
-    update = requests.post('http://192.168.0.73:8010/update/', data = { 'myname': 'Client 1',
-                                                                        'myip': 'My IP 1',
-                                                                        'yourip': '192.168.0.73:8010' }).json()
+    update = requests.post(SERVER_URL+'update/?code='+conf.SHARED_SECRET, data=json.dumps(device_info())).json()
     print(update)
+    return update
 
 def show_menu():
     print('\n-Menu---------------------------')
