@@ -1,7 +1,7 @@
-import os, json
+import os, json, datetime
 import tornado.ioloop
 import tornado.web
-import conf
+from dynipman import conf
 
 SERVER_PORT = conf.SERVER['port']
 DATA_PATH = conf.SERVER['data_path']
@@ -16,11 +16,18 @@ def load_addressbook():
     finally:
         return result
     
-def save_addressbook(addressbook):
+def save_addressbook(addressbook, new_info):
     try:
+        if not os.path.exists(os.path.dirname(DATA_PATH)):
+            os.makedirs(os.path.dirname(DATA_PATH))
+        
         with open(DATA_PATH, 'w') as bookfile:
             data = json.dumps(addressbook)
             bookfile.write(data)
+        with open(os.path.join(os.path.dirname(DATA_PATH), 'log.txt'), 'a') as logfile:
+            new_info['dtstamp'] = datetime.datetime.now().isoformat()
+            data = json.dumps(new_info)+'\n'
+            logfile.write(data)
         return True
     except ValueError:
         return False
@@ -29,7 +36,7 @@ addressbook = load_addressbook()
 
 def update_address(name, new_info):
     addressbook[name] = new_info
-    return save_addressbook(addressbook)
+    return save_addressbook(addressbook, new_info)
 
 def is_authorized(handler):
     code = handler.get_query_arguments('code')
@@ -84,13 +91,16 @@ class UpdateHandler(tornado.web.RequestHandler):
         
 def make_app():
     print('========================')
-    print(' starting jksdns server ')
+    print(' starting dynipman server ')
     print('========================')
     return tornado.web.Application([ (r'/$', MainHandler),
                                      (r'/update/$', UpdateHandler), 
                                     ])
-
-if __name__ == "__main__":
+    
+def run():
     app = make_app()
     app.listen(SERVER_PORT)
     tornado.ioloop.IOLoop.current().start()
+
+if __name__ == "__main__":
+    run()

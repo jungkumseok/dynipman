@@ -1,20 +1,17 @@
 import requests, socket, json
-import conf
+from dynipman import conf
 
 CLIENT_NAME = conf.CLIENT['name']
-
 # SERVER_URL = 'http://www.jungkumseok.com:7883'
 SERVER_URL = conf.SERVER['url']
 
 def device_info():
     info = {
             'host': socket.gethostname(),
-            'name': CLIENT_NAME,
-            'nonce': 'abcdefg',
+            'name': CLIENT_NAME
             }
     print("Client host: "+info['host'])
     print("Client name: "+info['name'])
-    print("Client secret: "+info['nonce'])
     return info
     
 def report_ip():
@@ -26,7 +23,8 @@ def show_menu():
     print('\n-Menu---------------------------')
     print('\n1. Show Device Info')
     print('2. Report IP Address to Server')
-    print('\n--------------------------------')
+    print('\n type "exit" to exit ')
+    print('--------------------------------')
     return {
             '1': device_info,
             '2': report_ip,
@@ -35,7 +33,7 @@ def show_menu():
 def run():
     KEEP_ALIVE = True
     print('=HELLO==================')
-    print(' starting jksdns client ')
+    print(' starting dynipman client ')
     print('========================')
     while KEEP_ALIVE:
         menu = show_menu()
@@ -44,7 +42,7 @@ def run():
             menu[uin]()
         KEEP_ALIVE = not (uin == 'exit')
     print('========================')
-    print(' quitting jksdns client ')
+    print(' quitting dynipman client ')
     print('====================BYE=')
     return
 
