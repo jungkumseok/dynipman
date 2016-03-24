@@ -1,55 +1,21 @@
-import os, json, datetime
+import json
+from dynipman.components import Server
 import tornado.ioloop
 import tornado.web
-from dynipman import conf
-
-SERVER_PORT = conf.SERVER['port']
-DATA_PATH = conf.SERVER['data_path']
-
-def load_addressbook():
-    result = {}
-    try:
-        with open(DATA_PATH, 'r') as bookfile:
-            result = json.loads(bookfile.read())
-    except ValueError:
-        pass
-    finally:
-        return result
     
-def save_addressbook(addressbook, new_info):
-    try:
-        if not os.path.exists(os.path.dirname(DATA_PATH)):
-            os.makedirs(os.path.dirname(DATA_PATH))
-        
-        with open(DATA_PATH, 'w') as bookfile:
-            data = json.dumps(addressbook)
-            bookfile.write(data)
-        with open(os.path.join(os.path.dirname(DATA_PATH), 'log.txt'), 'a') as logfile:
-            new_info['dtstamp'] = datetime.datetime.now().isoformat()
-            data = json.dumps(new_info)+'\n'
-            logfile.write(data)
-        return True
-    except ValueError:
-        return False
+running_server = Server()
 
-addressbook = load_addressbook()
-
-def update_address(name, new_info):
-    addressbook[name] = new_info
-    return save_addressbook(addressbook, new_info)
-
-def is_authorized(handler):
+def is_authorized(handler, server):
     code = handler.get_query_arguments('code')
     if len(code) > 0:
-        return (code[0] == conf.SHARED_SECRET)
+        return (code[0] == server.key)
     else:
         return False
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        if is_authorized(self):
-            message = "You are authorized to view the addressbook"
-            message += "\n"+json.dumps(addressbook)
+        if is_authorized(self, running_server):
+            message = '\n'+json.dumps(running_server.addressbook)
             self.write(message)
             print("Main - Authorized")
         else:
@@ -61,7 +27,7 @@ class MainHandler(tornado.web.RequestHandler):
 class UpdateHandler(tornado.web.RequestHandler):
     def post(self):
         client_data = json.loads(self.request.body.decode())
-        if is_authorized(self):
+        if is_authorized(self, running_server):
             print('Update - Authorized')
             client_info = {
                            'ip': self.request.remote_ip,
@@ -71,7 +37,8 @@ class UpdateHandler(tornado.web.RequestHandler):
             print("IP Update Request from "+client_info['name'])
             print('    Client host : '+client_info['host'])
             print('    Client IP   : '+client_info['ip'])
-            saved = update_address(client_info['name'], client_info)
+            saved = running_server.update_address(client_info['name'], client_info)
+            
             if saved:
                 response = { 'result': 'success',
                             'data': 'Update saved successfully',
@@ -99,7 +66,7 @@ def make_app():
     
 def run():
     app = make_app()
-    app.listen(SERVER_PORT)
+    app.listen(running_server.config['port'])
     tornado.ioloop.IOLoop.current().start()
 
 if __name__ == "__main__":

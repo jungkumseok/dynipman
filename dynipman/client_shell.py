@@ -1,22 +1,14 @@
-import requests, socket, json
-from dynipman import conf
+from dynipman.components import Client
 
-CLIENT_NAME = conf.CLIENT['name']
-# SERVER_URL = 'http://www.jungkumseok.com:7883'
-SERVER_URL = conf.SERVER['url']
+client = Client()
 
 def device_info():
-    info = {
-            'host': socket.gethostname(),
-            'name': CLIENT_NAME
-            }
-    print("Client host: "+info['host'])
-    print("Client name: "+info['name'])
-    return info
+    print("Client host: "+client.info['host'])
+    print("Client name: "+client.info['name'])
+    return client.info
     
 def report_ip():
-    update = requests.post(SERVER_URL+'update/?code='+conf.SHARED_SECRET, data=json.dumps(device_info())).json()
-    print(update)
+    update = client.report_ip()
     return update
 
 def show_menu():
