@@ -2,7 +2,8 @@ import os, json, datetime, time, socket, requests
 from distutils import file_util
 from importlib.machinery import SourceFileLoader
 
-_base_dir = os.path.join(os.path.expanduser('~'), '.dynipman')
+# _base_dir = os.path.join(os.path.expanduser('~'), '.dynipman') #running with current user
+_base_dir = os.path.join('/var/lib/', 'dynipman') #running under root - for Upstart init
 
 def load_config():
     if not os.path.exists(_base_dir):
