@@ -1,0 +1,52 @@
+#!/bin/sh
+NAME="dynipman"
+PIDFILE=/var/run/$NAME.pid
+
+case "$1" in
+  start)
+    if [ -f $PIDFILE ]; then
+      printf "%s\n" "$NAME client already running"
+    else
+      echo "starting $NAME client"
+      PID=`dynipman_cd > /dev/null 2>&1 & echo $!`
+      if [ -z $PID ]; then
+        printf "%s\n" "failed to start"
+      else
+        echo $PID > $PIDFILE
+          printf "%s\n" "starting with pid=$PID"
+      fi
+    fi
+    ;;
+  status)
+    printf "%-50s" "checking $NAME client"
+    if [ -f $PIDFILE ]; then
+      PID=`cat $PIDFILE`
+      if [ -z "`ps axf | grep ${PID} | grep -v grep`" ]; then
+        printf "%s\n" "process dead, but pidfile exists"
+      else
+        echo "$NAME client running with pid=$PID"
+      fi
+    else
+      printf "%s\n" "$NAME client not running"
+    fi
+    ;;
+  stop)
+    printf "%s\n" "stopping $NAME client"
+      PID=`cat $PIDFILE`
+    if [ -f $PIDFILE ]; then
+      kill -HUP $PID
+      printf "%s\n" "killed process $PID"
+      rm -f $PIDFILE
+    else
+      printf "%s\n" "pidfile not found"
+    fi
+;;
+  restart)
+    $0 stop
+    $0 start
+;;
+
+  *)
+    echo "usage: $0 {status|start|stop|restart}"
+    exit 1
+esac
