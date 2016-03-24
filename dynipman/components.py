@@ -60,10 +60,17 @@ class Client():
                      }
         
     def report_ip(self):
-        update = requests.post(self.config.SERVER['url']+'update/?code='+self.config.SHARED_KEY, data=json.dumps(self.info)).json()
-        print(datetime.datetime.now())
-        print(update)
-        return update
+        try:
+            update = requests.post(self.config.SERVER['url']+'update/?code='+self.config.SHARED_KEY, data=json.dumps(self.info)).json()
+            print(datetime.datetime.now())
+            print(update)
+            return update
+        except requests.exceptions.ConnectionError:
+            print(datetime.datetime.now())
+            print('Connection Error!')
+            print('  check config at '+os.path.join(_base_dir, 'conf'))
+            print('  if the config is correct, then the server might be down.')
+            return None
     
     def start(self):
         while True:
