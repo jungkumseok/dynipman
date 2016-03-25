@@ -100,9 +100,10 @@ Now running *dynipman_cd* should be successful:
 
 The "yellow pages" can be read by opening up a browser and typing:
 ```
-   http://mydomain.com:7883/?code=YOUR_DYNIPMAN_SHARED_KEY
+   http://mydomain.com:7883/
 ```
-The page will display the raw json. (7883 is the default port number in *conf*)
+The page will display an html page (7883 is the default port number in *conf*)
+where you will be able to type in the code and then press enter to see the list of IPs
 
 
 If you want, after setting up and confirming connection between server and client, you can register the scripts to be run in the background on startup to make sure these services are always running.
