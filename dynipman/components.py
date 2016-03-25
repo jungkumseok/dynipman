@@ -46,9 +46,10 @@ class Server():
         result = self.save_addressbook()
         if result:
             with open(os.path.join(_base_dir, 'log.txt'), 'a') as logfile:
-                new_info['dtstamp'] = datetime.datetime.now().isoformat()
+                new_info['dtstamp'] = datetime.datetime.utcnow().isoformat()
                 data = json.dumps(new_info)+'\n'
                 logfile.write(data)
+        print(datetime.datetime.utcnow())
         return result
 
 
@@ -62,7 +63,9 @@ class Client():
         
     def report_ip(self):
         try:
-            update = requests.post(self.config.SERVER['url']+'update/?code='+self.config.SHARED_KEY, data=json.dumps(self.info)).json()
+            post_data = self.info.copy()
+            post_data['code'] = self.config.SHARED_KEY
+            update = requests.post(self.config.SERVER['url']+'update/', data=json.dumps(post_data)).json()
             print(datetime.datetime.now())
             print(update)
             return update

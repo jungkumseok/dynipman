@@ -1,38 +1,48 @@
 import json
 from dynipman.components import Server
 import tornado.ioloop
-import tornado.web
+from tornado.web import Application, URLSpec, RequestHandler
     
 running_server = Server()
 
 def is_authorized(handler, server):
-    code = handler.get_query_arguments('code')
+    if handler.request.method == 'GET':
+        code = handler.get_query_arguments('code')
+    elif handler.request.method == 'POST':
+        post_data = json.loads(handler.request.body.decode())
+        code = [post_data['code']]
     if len(code) > 0:
         return (code[0] == server.key)
     else:
         return False
 
-class MainHandler(tornado.web.RequestHandler):
+class MainHandler(RequestHandler):
     def get(self):
+        context = {
+                   'test': 'TESTING'
+                   }
+        self.render('index.html', title='dynipman', context=context)
+        
+    def post(self):
         if is_authorized(self, running_server):
-            message = '\n'+json.dumps(running_server.addressbook)
+            message = json.dumps(running_server.addressbook)
             self.write(message)
             print("Main - Authorized")
         else:
             self.write("Unauthorized")
             print("Main - UNAUTHORIZED")
-        print(repr(self.request))
-        print(self.request.body)
+#         print(repr(self.request))
+#         print(self.request.body)
         
-class UpdateHandler(tornado.web.RequestHandler):
+class UpdateHandler(RequestHandler):
     def post(self):
-        client_data = json.loads(self.request.body.decode())
         if is_authorized(self, running_server):
             print('Update - Authorized')
+            post_data = json.loads(self.request.body.decode())
             client_info = {
                            'ip': self.request.remote_ip,
-                           'host': client_data['host'],
-                           'name': client_data['name'],
+                           'host': post_data['host'],
+                           'name': post_data['name'],
                            }
             print("IP Update Request from "+client_info['name'])
             print('    Client host : '+client_info['host'])
@@ -52,17 +62,17 @@ class UpdateHandler(tornado.web.RequestHandler):
             response = { 'result': 'failure',
                          'data': 'Unauthorized Access',
                         }
-        print(repr(self.request))
-        print(self.request.body)
+#         print(repr(self.request))
+#         print(self.request.body)
         self.write(response)
         
 def make_app():
     print('========================')
     print(' starting dynipman server ')
     print('========================')
-    return tornado.web.Application([ (r'/$', MainHandler),
-                                     (r'/update/$', UpdateHandler), 
-                                    ])
+    return Application([ URLSpec(r'/$', MainHandler, name='main'),
+                         URLSpec(r'/update/$', UpdateHandler, name='update'), 
+                        ])
     
 def run():
     app = make_app()
