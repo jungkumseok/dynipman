@@ -9,6 +9,9 @@ _base_dir = os.path.join('/var/lib/', 'dynipman') #running under root - for Upst
 class ClientKeyNotFound(Exception):
     pass
 
+class TempKeyExpired(Exception):
+    pass
+
 def load_config():
     if not os.path.exists(_base_dir):
         os.makedirs(_base_dir)
@@ -37,6 +40,8 @@ class Server():
 #         print(handler.request.body)
         if self.use_RSA:
             client = handler.get_query_arguments('client')[0]
+            if not client in self.client_tempkeys.keys():
+                raise TempKeyExpired
             post_data = json.loads(sdecrypt(self.client_tempkeys[client], handler.request.body))
             message = post_data[0]
             signature = (post_data[1][0], )
@@ -120,6 +125,8 @@ class Server():
     def update(self, handler):
         if self.use_RSA:
             client = handler.get_query_arguments('client')[0]
+            if not client in self.client_tempkeys.keys():
+                raise TempKeyExpired
             post_data = json.loads(sdecrypt(self.client_tempkeys[client], handler.request.body))
             message = json.loads(post_data[0])
             client_info = {
@@ -211,14 +218,20 @@ class Client():
 #             print(message)
 #             print(signature)
 #             print(ciphertext)
-            response = requests.post(self.config.SERVER['url']+'update/?client='+self.info['name'], data=ciphertext).content
+            response = requests.post(self.config.SERVER['url']+'update/?client='+self.info['name'], data=ciphertext)
             try:
-                update = json.loads(sdecrypt(self.key, response))
+                update = json.loads(sdecrypt(self.key, response.content))
                 print(datetime.datetime.now())
                 print(update)
                 return update
             except ValueError:
-                print(response)
+                resp_data = response.json()
+                print(resp_data)
+                if 'error' in resp_data.keys():
+                    if resp_data['error'] == "TempKeyExpired":
+                        self.key = None
+                    elif resp_data['error'] == "ClientKeyNotFound":
+                        print("This client's public key is not registered with the server.\nPlease copy the public key to the server.")
                 return None
         except requests.exceptions.ConnectionError:
             print(datetime.datetime.now())

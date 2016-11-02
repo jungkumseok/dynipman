@@ -1,5 +1,5 @@
 import json
-from dynipman.components import Server, ClientKeyNotFound
+from dynipman.components import Server, ClientKeyNotFound, TempKeyExpired
 from dynipman.crypto import sencrypt
 import tornado.ioloop
 from tornado.web import Application, URLSpec, RequestHandler
@@ -46,7 +46,9 @@ class UpdateHandler(RequestHandler):
                 print('Update - UNAUTHORIZED')
                 self.write( { 'result': 'failure', 'data': 'Unauthorized Access', } )
         except ClientKeyNotFound:
-            self.write( { 'result': 'failure', 'data': 'Public Key Not Registered', } )
+            self.write( { 'result': 'failure', 'data': 'Public Key Not Registered', 'error': "ClientKeyNotFound"} )
+        except TempKeyExpired:
+            self.write( { 'result': 'failure', 'data': "Temporary Key Expired", 'error': "TempKeyExpired" })
     #         print(repr(self.request))
     #         print(self.request.body)
         
