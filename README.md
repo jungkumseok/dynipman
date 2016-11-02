@@ -118,7 +118,8 @@ When using RSA, the client will fetch a random key upon initial connection. All 
 ## Dependencies and Requirements
 
 * Server workstation with a known domain
-* tornado (python package)
+* tornado (pypi: tornado)
+* Crypto (pypi: pycrypto)
 
 
 ## License

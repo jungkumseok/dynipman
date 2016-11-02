@@ -1,8 +1,8 @@
 from distutils.core import setup
-VERSION = '0.1.dev1'
+VERSION = '0.1.dev2'
 setup(
   name = 'dynipman',
-  install_requires = ['tornado'],
+  install_requires = ['tornado', 'pycrypto'],
   packages = ['dynipman',],
   package_data = {'dynipman':['scripts/*', 'index.html']},
   scripts = ['dynipman/scripts/dynipman_cd','dynipman/scripts/dynipman_sd',],
