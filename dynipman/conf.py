@@ -1,4 +1,6 @@
 # Change this secret to something only you know
+USE_RSA = False
+
 SHARED_KEY = 'ThisIsNotASecureSecret'
 
 SERVER = {

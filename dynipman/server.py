@@ -1,5 +1,6 @@
 import json
-from dynipman.components import Server
+from dynipman.components import Server, ClientKeyNotFound
+from dynipman.crypto import sencrypt
 import tornado.ioloop
 from tornado.web import Application, URLSpec, RequestHandler
     
@@ -36,42 +37,33 @@ class MainHandler(RequestHandler):
         
 class UpdateHandler(RequestHandler):
     def post(self):
-        if is_authorized(self, running_server):
-            print('Update - Authorized')
-            post_data = json.loads(self.request.body.decode())
-            client_info = {
-                           'ip': self.request.remote_ip,
-                           'host': post_data['host'],
-                           'name': post_data['name'],
-                           }
-            print("IP Update Request from "+client_info['name'])
-            print('    Client host : '+client_info['host'])
-            print('    Client IP   : '+client_info['ip'])
-            saved = running_server.update_address(client_info['name'], client_info)
-            
-            if saved:
-                response = { 'result': 'success',
-                            'data': 'Update saved successfully',
-                            }
+        try:
+            if running_server.authenticate(self):
+                print('Update - Authorized')
+                result = running_server.update(self)
+                self.write( result )
             else:
-                response = { 'result': 'failure',
-                            'data': 'Failed to save data',
-                            }
-        else:
-            print('Update - UNAUTHORIZED')
-            response = { 'result': 'failure',
-                         'data': 'Unauthorized Access',
-                        }
-#         print(repr(self.request))
-#         print(self.request.body)
-        self.write(response)
+                print('Update - UNAUTHORIZED')
+                self.write( { 'result': 'failure', 'data': 'Unauthorized Access', } )
+        except ClientKeyNotFound:
+            self.write( { 'result': 'failure', 'data': 'Public Key Not Registered', } )
+    #         print(repr(self.request))
+    #         print(self.request.body)
+        
+        
+class TempKeyHandler(RequestHandler):
+    def post(self):
+        tempkey = running_server.make_tempkey(self.request)
+        self.write( tempkey )
         
 def make_app():
     print('========================')
     print(' starting dynipman server ')
+    print('    using RSA: '+str(running_server.use_RSA))
     print('========================')
     return Application([ URLSpec(r'/$', MainHandler, name='main'),
-                         URLSpec(r'/update/$', UpdateHandler, name='update'), 
+                         URLSpec(r'/update/$', UpdateHandler, name='update'),
+                         URLSpec(r'/tempkey/$', TempKeyHandler, name='tempkey'), 
                         ])
     
 def run():
